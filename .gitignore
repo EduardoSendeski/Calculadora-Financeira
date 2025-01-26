@@ -1,0 +1,21 @@
+# Flutter/Dart
+build/
+.android/
+.ios/
+.dart_tool/
+.packages
+pubspec.lock
+
+# VS Code
+.vscode/
+
+# Sistema
+.DS_Store
+*.log
+*.tmp
+
+# Outros
+*.iml
+.idea/
+*.rar
+*.zip
