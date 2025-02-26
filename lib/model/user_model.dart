@@ -1,16 +1,14 @@
 class UserModel {
-  final int? id;
+  final String? id; // Agora UUID em vez de int
   final String username;
   final String name;
   final String email;
-  final String password;
 
   UserModel({
     this.id,
     required this.username,
     required this.name,
     required this.email,
-    required this.password,
   });
 
   Map<String, dynamic> toMap() {
@@ -19,7 +17,6 @@ class UserModel {
       'username': username,
       'name': name,
       'email': email,
-      'password': password,
     };
   }
 }

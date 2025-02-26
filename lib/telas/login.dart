@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'tela_inicial.dart';
 import 'tela_cadastro.dart';
 import '../controllers/auth_controller.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'tela_esqueceuSenha.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final AuthController authController = AuthController();
+
+  LoginPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final TextEditingController usernameController = TextEditingController();
-    final TextEditingController passwordController = TextEditingController();
-    final AuthController authController = AuthController();
-
     return Scaffold(
       backgroundColor: Colors.green[700], // Fundo verde
       body: SafeArea(
@@ -58,11 +59,11 @@ class LoginPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 TextField(
-                  controller: usernameController,
+                  controller: emailController,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
-                    labelText: "Usuário",
+                    labelText: "E-mail",
                     prefixIcon: const Icon(Icons.email, color: Colors.green),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
@@ -119,13 +120,12 @@ class LoginPage extends StatelessWidget {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {
-                    final username = usernameController.text;
-                    final password = passwordController.text;
+                    final email = emailController.text.trim();
+                    final password = passwordController.text.trim();
 
-                    if (username.isNotEmpty && password.isNotEmpty) {
-                      final user =
-                          await authController.login(username, password);
-                      if (user != null) {
+                    if (email.isNotEmpty && password.isNotEmpty) {
+                      final response = await authController.login(email, password);
+                      if (response != null) {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
@@ -134,16 +134,12 @@ class LoginPage extends StatelessWidget {
                         );
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Usuário ou senha inválidos."),
-                          ),
+                          const SnackBar(content: Text("Usuário ou senha inválidos.")),
                         );
                       }
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Preencha todos os campos."),
-                        ),
+                        const SnackBar(content: Text("Preencha todos os campos.")),
                       );
                     }
                   },
@@ -158,8 +154,7 @@ class LoginPage extends StatelessWidget {
                   child: const Center(
                     child: Text(
                       "ENTRAR",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -178,22 +173,19 @@ class LoginPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     IconButton(
-                      onPressed: () => _launchUrl(
-                          "https://www.instagram.com/luiz_sendeski/"),
+                      onPressed: () => _launchUrl("https://www.instagram.com/luiz_sendeski/"),
                       icon: const Icon(Icons.camera_alt, color: Colors.white),
                       iconSize: 32,
                     ),
                     const SizedBox(width: 20),
                     IconButton(
-                      onPressed: () => _launchUrl(
-                          "https://www.facebook.com/profile.php?id=100008320505218"),
+                      onPressed: () => _launchUrl("https://www.facebook.com/profile.php?id=100008320505218"),
                       icon: const Icon(Icons.facebook, color: Colors.white),
                       iconSize: 32,
                     ),
                     const SizedBox(width: 20),
                     IconButton(
-                      onPressed: () => _launchUrl(
-                          "https://wa.me/5546988348869?text=Vim%20atrav%C3%A9s%20de%20seu%20app"),
+                      onPressed: () => _launchUrl("https://wa.me/5546988348869?text=Vim%20atrav%C3%A9s%20de%20seu%20app"),
                       icon: const Icon(Icons.telegram, color: Colors.white),
                       iconSize: 32,
                     ),
@@ -225,10 +217,10 @@ class LoginPage extends StatelessWidget {
   }
 
   void _launchUrl(String url) async {
-    if (await canLaunch(url)) {
-      await launch(url);
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url));
     } else {
-      throw 'Não foi possível abrir o link $url';
+      debugPrint('Não foi possível abrir o link: $url');
     }
   }
 }

@@ -9,6 +9,8 @@ import 'tela_sobre.dart';
 import 'tela_financiamento.dart';
 import 'tela_bolcas.dart';
 import 'login.dart';
+import 'profile_settings.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TelaInicial extends StatefulWidget {
   const TelaInicial({super.key});
@@ -25,12 +27,17 @@ class _TelaInicialState extends State<TelaInicial> {
   String? cotacaoBTC;
   String? cotacaoIBOV;
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchCotacoes();
-  }
+@override
+void initState() {
+  super.initState();
+  _fetchCotacoes();
+  _loadUserData();
+}
 
+  Future<void> _loadUserData() async {
+  await Future.delayed(const Duration(milliseconds: 500)); // Pequeno delay para garantir que o usuário já foi carregado
+  setState(() {}); // Força a atualização da tela para carregar os ícones corretamente
+}
   Future<void> _fetchCotacoes() async {
     try {
       // Busca cotações do dólar e bitcoin
@@ -109,33 +116,66 @@ class _TelaInicialState extends State<TelaInicial> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
+ Widget _buildHeader(BuildContext context) {
+  final user = Supabase.instance.client.auth.currentUser;
+
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
             "Simulador Financeiro",
             style: TextStyle(
               color: Colors.white,
-              fontSize: 28,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
+            overflow: TextOverflow.ellipsis,
           ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-              );
-            },
+        ),
+
+        // Se o usuário ainda não foi carregado, exibir um indicador de carregamento
+        if (user == null)
+          const SizedBox(
+            width: 30,
+            height: 30,
+            child: CircularProgressIndicator(color: Colors.white),
+          )
+        else
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.settings, color: Colors.white),
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfileSettingsPage()),
+                  );
+
+                  if (result == true) {
+                    setState(() {}); // Recarrega a tela para atualizar os dados
+                  }
+                },
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.logout, color: Colors.white),
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => LoginPage()),
+                  );
+                },
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
+      ],
+    ),
+  );
+}
+
+
 
   Widget _buildCotacoes() {
     return Column(

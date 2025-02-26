@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:mailer/mailer.dart';
-import 'package:mailer/smtp_server.dart';
-import '../controllers/auth_controller.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class ForgotPasswordPage extends StatelessWidget {
-  final TextEditingController emailController = TextEditingController();
-  final AuthController authController = AuthController();
+class ForgotPasswordPage extends StatefulWidget {
+  const ForgotPasswordPage({super.key});
 
-  ForgotPasswordPage({super.key});
+  @override
+  _ForgotPasswordPageState createState() => _ForgotPasswordPageState();
+}
+
+class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
+  final _emailController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +33,7 @@ class ForgotPasswordPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  "Digite o e-mail cadastrado e enviaremos seu usuário e senha.",
+                  "Digite o e-mail cadastrado e enviaremos um link para redefinição de senha.",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -39,7 +41,7 @@ class ForgotPasswordPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 40),
                 TextField(
-                  controller: emailController,
+                  controller: _emailController,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
@@ -52,48 +54,7 @@ class ForgotPasswordPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () async {
-                    final email = emailController.text;
-
-                    if (email.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Por favor, insira um e-mail válido.')),
-                      );
-                      return;
-                    }
-
-                    final user = await authController.dbHelper.getUserByUsernameOrEmail('', email);
-
-                    if (user == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('E-mail não encontrado.')),
-                      );
-                      return;
-                    }
-
-                    String username = 'noreplay.luizsendeski@gmail.com';
-                    String password = 'nlgz etke tbde bzkf';
-                    final smtpServer = gmail(username, password);
-                    
-
-                    final message = Message()
-                      ..from = Address(username, 'Sua Equipe')
-                      ..recipients.add(email)
-                      ..subject = 'Recuperação de Senha'
-                      ..text = 'Olá,\n\nSuas credenciais são:\nUsuário: ${user['username']}\nSenha: ${user['password']}\n\nEquipe.';
-
-                    try {
-                      await send(message, smtpServer);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('E-mail enviado com sucesso.')),
-                      );
-                      Navigator.pop(context);
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Erro ao enviar e-mail: $e')),
-                      );
-                    }
-                  },
+                  onPressed: _sendPasswordResetEmail,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.green[700],
@@ -104,7 +65,7 @@ class ForgotPasswordPage extends StatelessWidget {
                   ),
                   child: const Center(
                     child: Text(
-                      "ENVIAR",
+                      "ENVIAR LINK DE RECUPERAÇÃO",
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -127,5 +88,30 @@ class ForgotPasswordPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// **Envia o e-mail de recuperação de senha usando o Supabase**
+  Future<void> _sendPasswordResetEmail() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, insira um e-mail válido.')),
+      );
+      return;
+    }
+
+    try {
+      // Supabase envia o e-mail de redefinição de senha
+      await Supabase.instance.client.auth.resetPasswordForEmail(email);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('E-mail de redefinição enviado! Verifique sua caixa de entrada.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao enviar redefinição de senha: $e')),
+      );
+    }
   }
 }
